@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient & Doctor Management System</title>
+  <style>
+    :root {
+      --primary: #176b87;
+      --primary-dark: #0f4c64;
+      --accent: #dff4f7;
+      --bg: #f4f8fb;
+      --card: #ffffff;
+      --text: #18323d;
+      --muted: #6d828c;
+      --border: #dce7ec;
+      --danger: #c0392b;
+      --success: #197a56;
+      --shadow: 0 8px 24px rgba(21, 64, 82, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: linear-gradient(120deg, var(--primary-dark), var(--primary));
+      color: white; padding: 24px clamp(18px, 4vw, 48px);
+    }
+    .header-inner { max-width: 1200px; margin: auto; display: flex; gap: 16px; align-items: center; }
+    .logo {
+      width: 54px; height: 54px; display: grid; place-items: center; border-radius: 16px;
+      background: rgba(255,255,255,.16); font-size: 30px; font-weight: bold;
+    }
+    h1 { margin: 0 0 6px; font-size: clamp(23px, 3vw, 32px); }
+    header p { margin: 0; color: #d9f1f7; }
+    main { max-width: 1200px; margin: 26px auto; padding: 0 18px 40px; }
+    .notice {
+      padding: 12px 15px; margin-bottom: 20px; border: 1px solid #f0d58b; background: #fff9e7;
+      color: #745a14; border-radius: 10px; font-size: 13px; line-height: 1.5;
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 22px; }
+    .stat, .panel { background: var(--card); border: 1px solid var(--border); border-radius: 15px; box-shadow: var(--shadow); }
+    .stat { padding: 18px 20px; }
+    .stat span { color: var(--muted); font-size: 13px; }
+    .stat strong { display: block; font-size: 30px; margin-top: 7px; }
+    .layout { display: grid; grid-template-columns: 350px minmax(0, 1fr); gap: 20px; align-items: start; }
+    .panel { padding: 22px; margin-bottom: 20px; }
+    .panel h2 { font-size: 19px; margin: 0 0 18px; }
+    label { display: block; font-size: 13px; font-weight: 700; margin: 12px 0 6px; }
+    input, select, textarea {
+      width: 100%; border: 1px solid #cbdbe2; border-radius: 8px; padding: 10px 11px;
+      font: inherit; color: var(--text); background: white; outline: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(23,107,135,.12); }
+    textarea { min-height: 72px; resize: vertical; }
+    .btn {
+      border: 0; background: var(--primary); color: white; border-radius: 8px; padding: 10px 14px;
+      font-weight: 700; cursor: pointer; transition: .15s; font-size: 13px;
+    }
+    .btn:hover { background: var(--primary-dark); }
+    .btn.secondary { background: #e8f2f5; color: var(--primary-dark); }
+    .btn.secondary:hover { background: #d6e9ee; }
+    .btn.danger { background: #fff0ee; color: var(--danger); }
+    .btn.danger:hover { background: #ffe0dc; }
+    .form-actions { display: flex; gap: 8px; margin-top: 17px; flex-wrap: wrap; }
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+    .toolbar input { flex: 1; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tab { border: 1px solid var(--border); background: white; color: var(--muted); border-radius: 9px; padding: 9px 13px; cursor: pointer; font-weight: 700; }
+    .tab.active { background: var(--accent); color: var(--primary-dark); border-color: #b7dfe7; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 570px; font-size: 13px; }
+    th, td { padding: 12px 10px; border-bottom: 1px solid #e9eff2; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; background: #f8fbfc; }
+    tbody tr:hover { background: #fbfdfe; }
+    .pill { display: inline-block; padding: 5px 8px; border-radius: 20px; background: #e7f6ef; color: var(--success); font-size: 11px; font-weight: 700; }
+    .empty { text-align: center; color: var(--muted); padding: 28px 10px; }
+    .small-actions { display: flex; gap: 6px; }
+    .small-actions .btn { padding: 6px 8px; }
+    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 10px 18px 28px; }
+    @media (max-width: 850px) { .layout { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="logo" aria-hidden="true">✚</div>
+      <div>
+        <h1>Patient & Doctor Management</h1>
+        <p>A simple dashboard to manage patients, doctors, and appointments</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="notice">
+      <strong>Demo project:</strong> This page stores data only in this browser using local storage. Use fictional data only.
+      It is not a secure medical record system and should not be used for real patient information.
+    </div>
+
+    <section class="stats" aria-label="Summary">
+      <div class="stat"><span>Total patients</span><strong id="patientCount">0</strong></div>
+      <div class="stat"><span>Total doctors</span><strong id="doctorCount">0</strong></div>
+      <div class="stat"><span>Appointments</span><strong id="appointmentCount">0</strong></div>
+    </section>
+
+    <div class="layout">
+      <aside>
+        <section class="panel">
+          <h2 id="formTitle">Add a Patient</h2>
+          <form id="recordForm">
+            <label for="recordType">Record type</label>
+            <select id="recordType">
+              <option value="patient">Patient</option>
+              <option value="doctor">Doctor</option>
+              <option value="appointment">Appointment</option>
+            </select>
+            <div id="dynamicFields"></div>
+            <div class="form-actions">
+              <button class="btn" type="submit" id="saveBtn">Add record</button>
+              <button class="btn secondary" type="button" id="cancelEditBtn" hidden>Cancel edit</button>
+            </div>
+          </form>
+        </section>
+      </aside>
+
+      <section class="panel">
+        <h2>Records</h2>
+        <div class="tabs" role="tablist" aria-label="Record category">
+          <button class="tab active" data-view="patients" type="button">Patients</button>
+          <button class="tab" data-view="doctors" type="button">Doctors</button>
+          <button class="tab" data-view="appointments" type="button">Appointments</button>
+        </div>
+        <div class="toolbar">
+          <input id="searchInput" type="search" placeholder="Search current records..." aria-label="Search current records" />
+          <button class="btn secondary" id="exportBtn" type="button">Export CSV</button>
+        </div>
+        <div class="table-wrap" id="tableContainer"></div>
+      </section>
+    </div>
+  </main>
+  <footer>Patient & Doctor Management System · Front-end demo</footer>
+
+<script>
+(() => {
+  const STORAGE_KEY = "patientDoctorManagementDemo_v1";
+  const blankData = { patients: [], doctors: [], appointments: [] };
+  let data = loadData();
+  let currentView = "patients";
+  let editing = null;
+
+  const $ = (id) => document.getElementById(id);
+  const form = $("recordForm");
+  const typeSelect = $("recordType");
+  const dynamicFields = $("dynamicFields");
+
+  function loadData() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return saved && saved.patients && saved.doctors && saved.appointments ? saved : structuredClone(blankData);
+    } catch { return structuredClone(blankData); }
+  }
+  function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    render();
+  }
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[c]);
+  }
+  function field(label, name, type = "text", required = true, extra = "") {
+    return `<label for="${name}">${label}</label><input id="${name}" name="${name}" type="${type}" ${required ? "required" : ""} ${extra}>`;
+  }
+  function selectField(label, name, options, required = true) {
+    return `<label for="${name}">${label}</label><select id="${name}" name="${name}" ${required ? "required" : ""}>
+      <option value="">Select ${label.toLowerCase()}</option>
+      ${options.map(o => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join("")}
+    </select>`;
+  }
+  function renderFields(values = {}) {
+    const type = typeSelect.value;
+    $("formTitle").textContent = editing ? `Edit ${singular(type)}` : `Add a ${singular(type)}`;
+    $("saveBtn").textContent = editing ? "Save changes" : "Add record";
+    $("cancelEditBtn").hidden = !editing;
+    if (type === "patient") {
+      dynamicFields.innerHTML =
+        field("Full name", "name") +
+        field("Age", "age", "number", true, 'min="0" max="125"') +
+        selectField("Gender", "gender", [{value:"Female",label:"Female"},{value:"Male",label:"Male"},{value:"Other",label:"Other"},{value:"Prefer not to say",label:"Prefer not to say"}]) +
+        field("Phone", "phone", "tel", false) +
+        field("Email", "email", "email", false) +
+        `<label for="condition">Reason for visit / notes</label><textarea id="condition" name="condition" placeholder="Optional notes"></textarea>`;
+    } else if (type === "doctor") {
+      dynamicFields.innerHTML =
+        field("Full name", "name") +
+        field("Specialization", "specialization") +
+        field("Phone", "phone", "tel", false) +
+        field("Email", "email", "email", false);
+    } else {
+      dynamicFields.innerHTML =
+        selectField("Patient", "patientId", data.patients.map(p => ({value:p.id,label:p.name}))) +
+        selectField("Doctor", "doctorId", data.doctors.map(d => ({value:d.id,label:`${d.name} — ${d.specialization}`}))) +
+        field("Date", "date", "date") +
+        field("Time", "time", "time") +
+        selectField("Status", "status", [{value:"Scheduled",label:"Scheduled"},{value:"Completed",label:"Completed"},{value:"Cancelled",label:"Cancelled"}]) +
+        `<label for="reason">Reason / notes</label><textarea id="reason" name="reason" placeholder="Optional notes"></textarea>`;
+      if (!data.patients.length || !data.doctors.length) {
+        dynamicFields.insertAdjacentHTML("afterbegin", `<p style="color:#a34b20;font-size:12px;line-height:1.5">Add at least one patient and one doctor before creating an appointment.</p>`);
+      }
+    }
+    if (values) {
+      Object.entries(values).forEach(([key, value]) => {
+        const input = form.elements.namedItem(key);
+        if (input) input.value = value ?? "";
+      });
+    }
+  }
+  function singular(type) { return type === "appointment" ? "Appointment" : type[0].toUpperCase() + type.slice(1); }
+  function collectionFor(type) { return type === "patient" ? "patients" : type === "doctor" ? "doctors" : "appointments"; }
+  function newId() { return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`; }
+  function readForm() {
+    const result = {};
+    [...form.querySelectorAll("#dynamicFields input, #dynamicFields select, #dynamicFields textarea")].forEach(el => result[el.name] = el.value.trim());
+    return result;
+  }
+  function startEdit(collection, id) {
+    const item = data[collection].find(x => x.id === id);
+    if (!item) return;
+    const type = collection === "patients" ? "patient" : collection === "doctors" ? "doctor" : "appointment";
+    editing = { collection, id };
+    typeSelect.value = type;
+    renderFields(item);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function resetForm() {
+    editing = null;
+    form.reset();
+    typeSelect.value = currentView === "patients" ? "patient" : currentView === "doctors" ? "doctor" : "appointment";
+    renderFields();
+  }
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const type = typeSelect.value;
+    const values = readForm();
+    if (type === "appointment" && (!data.patients.length || !data.doctors.length)) {
+      alert("Please add a patient and a doctor first."); return;
+    }
+    const collection = collectionFor(type);
+    if (editing) {
+      const index = data[editing.collection].findIndex(x => x.id === editing.id);
+      if (index >= 0) data[editing.collection][index] = { ...data[editing.collection][index], ...values };
+    } else {
+      data[collection].push({ id: newId(), createdAt: new Date().toISOString(), ...values });
+    }
+    const nextView = collection;
+    editing = null;
+    form.reset();
+    currentView = nextView;
+    updateTabs();
+    renderFields();
+    persist();
+  });
+
+  $("cancelEditBtn").addEventListener("click", resetForm);
+  typeSelect.addEventListener("change", () => { editing = null; renderFields(); });
+  $("searchInput").addEventListener("input", renderTable);
+  document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
+    currentView = btn.dataset.view;
+    $("searchInput").value = "";
+    updateTabs();
+    typeSelect.value = currentView === "patients" ? "patient" : currentView === "doctors" ? "doctor" : "appointment";
+    editing = null;
+    renderFields();
+    renderTable();
+  }));
+  function updateTabs() {
+    document.querySelectorAll(".tab").forEach(btn => btn.classList.toggle("active", btn.dataset.view === currentView));
+  }
+  function patientName(id) { return data.patients.find(p => p.id === id)?.name || "Unknown patient"; }
+  function doctorName(id) {
+    const d = data.doctors.find(doc => doc.id === id);
+    return d ? `${d.name} (${d.specialization})` : "Unknown doctor";
+  }
+  function actionButtons(collection, id) {
+    return `<div class="small-actions">
+      <button class="btn secondary" type="button" data-action="edit" data-collection="${collection}" data-id="${id}">Edit</button>
+      <button class="btn danger" type="button" data-action="delete" data-collection="${collection}" data-id="${id}">Delete</button>
+    </div>`;
+  }
+  function renderTable() {
+    const query = $("searchInput").value.toLowerCase().trim();
+    const rows = data[currentView].filter(item => {
+      const searchable = currentView === "appointments"
+        ? `${patientName(item.patientId)} ${doctorName(item.doctorId)} ${item.date} ${item.status} ${item.reason}`
+        : JSON.stringify(item);
+      return searchable.toLowerCase().includes(query);
+    });
+    let headings, rowHtml;
+    if (currentView === "patients") {
+      headings = ["Name", "Age / Gender", "Contact", "Notes", "Actions"];
+      rowHtml = rows.map(p => `<tr>
+        <td><strong>${escapeHtml(p.name)}</strong></td>
+        <td>${escapeHtml(p.age)} / ${escapeHtml(p.gender)}</td>
+        <td>${escapeHtml(p.phone || "—")}<br>${escapeHtml(p.email || "")}</td>
+        <td>${escapeHtml(p.condition || "—")}</td>
+        <td>${actionButtons("patients", p.id)}</td></tr>`).join("");
+    } else if (currentView === "doctors") {
+      headings = ["Doctor", "Specialization", "Contact", "Actions"];
+      rowHtml = rows.map(d => `<tr>
+        <td><strong>${escapeHtml(d.name)}</strong></td>
+        <td>${escapeHtml(d.specialization)}</td>
+        <td>${escapeHtml(d.phone || "—")}<br>${escapeHtml(d.email || "")}</td>
+        <td>${actionButtons("doctors", d.id)}</td></tr>`).join("");
+    } else {
+      headings = ["Patient", "Doctor", "Date / Time", "Status", "Actions"];
+      rowHtml = rows.map(a => `<tr>
+        <td>${escapeHtml(patientName(a.patientId))}</td>
+        <td>${escapeHtml(doctorName(a.doctorId))}</td>
+        <td>${escapeHtml(a.date)}<br>${escapeHtml(a.time)}</td>
+        <td><span class="pill" style="${a.status === "Cancelled" ? "background:#fff0ee;color:#b83227" : a.status === "Completed" ? "background:#e8f2ff;color:#275ca8" : ""}">${escapeHtml(a.status)}</span><br><small>${escapeHtml(a.reason || "")}</small></td>
+        <td>${actionButtons("appointments", a.id)}</td></tr>`).join("");
+    }
+    $("tableContainer").innerHTML = `<table><thead><tr>${headings.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+      <tbody>${rowHtml || `<tr><td class="empty" colspan="${headings.length}">No records found. Add a record using the form.</td></tr>`}</tbody></table>`;
+  }
+  $("tableContainer").addEventListener("click", e => {
+    const button = e.target.closest("button[data-action]");
+    if (!button) return;
+    const { action, collection, id } = button.dataset;
+    if (action === "edit") {
+      startEdit(collection, id);
+    } else if (action === "delete") {
+      if (!confirm("Delete this record? This action cannot be undone.")) return;
+      if (collection === "patients") {
+        data.appointments = data.appointments.filter(a => a.patientId !== id);
+      } else if (collection === "doctors") {
+        data.appointments = data.appointments.filter(a => a.doctorId !== id);
+      }
+      data[collection] = data[collection].filter(item => item.id !== id);
+      if (editing && editing.id === id) resetForm();
+      persist();
+      renderFields();
+    }
+  });
+  $("exportBtn").addEventListener("click", () => {
+    const rows = data[currentView];
+    if (!rows.length) { alert("There are no records to export."); return; }
+    let headers, values;
+    if (currentView === "patients") {
+      headers = ["Name","Age","Gender","Phone","Email","Notes"];
+      values = rows.map(p => [p.name,p.age,p.gender,p.phone,p.email,p.condition]);
+    } else if (currentView === "doctors") {
+      headers = ["Name","Specialization","Phone","Email"];
+      values = rows.map(d => [d.name,d.specialization,d.phone,d.email]);
+    } else {
+      headers = ["Patient","Doctor","Date","Time","Status","Reason"];
+      values = rows.map(a => [patientName(a.patientId),doctorName(a.doctorId),a.date,a.time,a.status,a.reason]);
+    }
+    const csvCell = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = [headers, ...values].map(row => row.map(csvCell).join(",")).join("\r\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url; link.download = `${currentView}.csv`; link.click();
+    URL.revokeObjectURL(url);
+  });
+  function render() {
+    $("patientCount").textContent = data.patients.length;
+    $("doctorCount").textContent = data.doctors.length;
+    $("appointmentCount").textContent = data.appointments.length;
+    renderTable();
+  }
+
+  renderFields();
+  render();
+})();
+</script>
+</body>
+</html>
