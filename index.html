@@ -289,14 +289,21 @@
       <button class="btn danger" type="button" data-action="delete" data-collection="${collection}" data-id="${id}">Delete</button>
     </div>`;
   }
-  function renderTable() {
-    const query = $("searchInput").value.toLowerCase().trim();
-    const rows = data[currentView].filter(item => {
-      const searchable = currentView === "appointments"
-        ? `${patientName(item.patientId)} ${doctorName(item.doctorId)} ${item.date} ${item.status} ${item.reason}`
-        : JSON.stringify(item);
-      return searchable.toLowerCase().includes(query);
+ function filterRecords(records, query, view) {
+    const searchText = query.toLowerCase().trim();
+
+    return records.filter(item => {
+        const searchable = view === "appointments"
+            ? `${patientName(item.patientId)} ${doctorName(item.doctorId)} ${item.date} ${item.time} ${item.status} ${item.reason}`
+            : JSON.stringify(item);
+
+        return searchable.toLowerCase().includes(searchText);
     });
+}
+
+function renderTable() {
+    const query = $("searchInput").value;
+    const rows = filterRecords(data[currentView], query, currentView);
     let headings, rowHtml;
     if (currentView === "patients") {
       headings = ["Name", "Age / Gender", "Contact", "Notes", "Actions"];
